@@ -8,7 +8,7 @@ app.use("/api", require("./api"));
 app.use(bodyParser.json());
 
 // const syncDB = () => db.sync({force: true});
-const syncDB = () => db.sync();
+const syncDB = () => db.sync({ force: true });
 
 const serverRun = () => {
   app.listen(process.env.PORT, () => {
