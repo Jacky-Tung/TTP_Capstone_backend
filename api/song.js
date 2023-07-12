@@ -6,16 +6,21 @@ const Song = require("../db/models");
 
 // fetches info about a song
 router.get("/:id/info", async (req, res) => {
-    try {
-        const songId = req.params.id;
-        const songInfo = await fetch(`https://api.spotify.com/v1/tracks/${songId}`, {
-            method: "GET",
-            // headers: {
-            //     'Authorization': '' // insert access token here
-            // }
-        }).json();
-        // songInfo ? res.status(200);
-    } catch {
-        next(err);
-    }
-}) 
+  try {
+    const songId = req.params.id;
+    const songInfo = await fetch(
+      `https://api.spotify.com/v1/tracks/${songId}`,
+      {
+        method: "GET",
+        // headers: {
+        //     'Authorization': '' // insert access token here
+        // }
+      }
+    ).json();
+    // songInfo ? res.status(200);
+  } catch {
+    next(err);
+  }
+});
+
+module.exports = router;

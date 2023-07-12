@@ -50,15 +50,15 @@ const generatePlayback = (count, songIds, userIds) => {
         const playback_id = (i+1).toString();
         const latitude = faker.location.latitude();
         const longitude = faker.location.longitude();
-        const SongSongId = getRandomElement(songIds);
-        const UserUserid = getRandomElement(userIds);
+        const songId = getRandomElement(songIds);
+        const userId = getRandomElement(userIds);
 
         playbacks.push({
             playback_id,
             latitude,
             longitude,
-            // SongSongId,
-            // UserUserid,
+            songId,
+            userId,
         });
     }
     return playbacks;
@@ -77,12 +77,14 @@ const seed = async () => {
     returning: true,
   });
   const songIds = createdSongs.map(song => song.song_id)
+  console.log("Song Ids", songIds)
 
   const seedUsers = generateUsers(10);
   const createdUsers = await User.bulkCreate(seedUsers, {
     returning: true,
   });
   const userIds = createdUsers.map(user => user.user_id)
+  console.log("User Ids", userIds);
   
   const seedPlayback = generatePlayback(10, songIds, userIds);
   await Playback.bulkCreate(seedPlayback);
