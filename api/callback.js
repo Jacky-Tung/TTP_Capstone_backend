@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const request = require("request"); 
+const request = require("request");
 const cors = require("cors");
 const querystring = require("querystring");
 const cookieParser = require("cookie-parser");
@@ -8,6 +8,15 @@ const cookieParser = require("cookie-parser");
 var client_id = process.env.CLIENT_ID;
 var client_secret = process.env.CLIENT_SECRET;
 var redirect_uri = process.env.REDIRECT_URI;
+
+/* response object for callback
+{
+   "access_token": "NgCXRK...MzYjw",
+   "token_type": "Bearer",
+   "scope": "user-read-private user-read-email",
+   "expires_in": 3600,
+   "refresh_token": "NgAagA...Um_SHo"
+} */
 
 router.get("/callback", function (req, res) {
   var code = req.query.code || null;
@@ -72,6 +81,13 @@ request.post(authOptions, function (error, response, body) {
   }
 });
 
+/* response object for refresh token
+{
+   "access_token": "NgA6ZcYI...ixn8bUQ",
+   "token_type": "Bearer",
+   "scope": "user-read-private user-read-email",
+   "expires_in": 3600
+} */
 router.get("/refresh_token", function (req, res) {
   // requesting access token from refresh token
   var refresh_token = req.query.refresh_token;
@@ -99,4 +115,4 @@ router.get("/refresh_token", function (req, res) {
   });
 });
 
-module.exports = router
+module.exports = router;
