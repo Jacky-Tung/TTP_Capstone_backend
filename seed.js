@@ -1,4 +1,4 @@
-const { Playback, Song, User } = require("./db/models");
+const { Playback, Song, User, PlaybackDetails } = require("./db/models");
 const db = require("./db/db");
 const { faker } = require("@faker-js/faker");
 
@@ -45,24 +45,36 @@ const generateUsers = (count) => {
 };
 
 const generatePlayback = (count, songIds, userIds) => {
-    const playbacks = [];
-    for(let i = 0; i < count; i++){
-        const playback_id = (i+1).toString();
-        const latitude = faker.location.latitude();
-        const longitude = faker.location.longitude();
-        const songId = getRandomElement(songIds);
-        const userId = getRandomElement(userIds);
+  const playbacks = [];
+  for (let i = 0; i < count; i++) {
+    const playback_id = (i + 1).toString();
+    const songId = getRandomElement(songIds);
+    const userId = getRandomElement(userIds);
 
-        playbacks.push({
-            playback_id,
-            latitude,
-            longitude,
-            songId,
-            userId,
-        });
-    }
-    return playbacks;
-}
+    playbacks.push({
+      playback_id,
+      user_id: userId,
+      song_id: songId,
+    });
+  }
+  return playbacks;
+};
+
+const generatePlaybackDetails = (count) => {
+  const playbackDetails = [];
+  for (let i = 0; i < count; i++) {
+    const playback_id = (i + 1).toString();
+    const latitude = faker.location.latitude();
+    const longitude = faker.location.longitude();
+
+    playbackDetails.push({
+      playback_id,
+      latitude,
+      longitude,
+    });
+  }
+  return playbackDetails;
+};
 
 const getRandomElement = (array) => {
   const randomIndex = Math.floor(Math.random() * array.length);
@@ -76,18 +88,21 @@ const seed = async () => {
   const createdSongs = await Song.bulkCreate(seedSongs, {
     returning: true,
   });
-  const songIds = createdSongs.map(song => song.song_id)
-  console.log("Song Ids", songIds)
+  const songIds = createdSongs.map((song) => song.song_id);
+  console.log("Song Ids", songIds);
 
   const seedUsers = generateUsers(10);
   const createdUsers = await User.bulkCreate(seedUsers, {
     returning: true,
   });
-  const userIds = createdUsers.map(user => user.user_id)
+  const userIds = createdUsers.map((user) => user.user_id);
   console.log("User Ids", userIds);
-  
+
   const seedPlayback = generatePlayback(10, songIds, userIds);
   await Playback.bulkCreate(seedPlayback);
+
+  const seedPlaybackDetails = generatePlaybackDetails(10);
+  await PlaybackDetails.bulkCreate(seedPlaybackDetails);
 
   process.exit();
 };
