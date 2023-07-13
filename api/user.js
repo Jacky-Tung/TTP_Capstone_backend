@@ -39,6 +39,7 @@ router.get("/login", async (req, res) => {
   var state = generateRandomString(16);
   var scope = "user-read-private user-read-email user-read-playback-state user-read-recently-played";
 
+
   res.redirect(
     "https://accounts.spotify.com/authorize?" +
       querystring.stringify({

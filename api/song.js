@@ -13,7 +13,7 @@ router.get("/:id/info", async (req, res) => {
       {
         method: "GET",
         // headers: {
-        //     'Authorization': '' // insert access token here
+        //     'Authorization': Bearer '' // insert access token here
         // }
       }
     ).json();
