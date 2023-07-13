@@ -8,13 +8,13 @@ const { User } = require("../db/models");
 
 // Get recently played songs - https://developer.spotify.com/documentation/web-api/reference/get-recently-played
 
-var client_id = process.env.CLIENT_ID;
-var client_secret = process.env.CLIENT_SECRET;
-var redirect_uri = process.env.REDIRECT_URI;
+const client_id = process.env.CLIENT_ID;
+const client_secret = process.env.CLIENT_SECRET;
+const redirect_uri = process.env.REDIRECT_URI;
 
-var generateRandomString = function (length) {
-  var text = "";
-  var possible =
+const generateRandomString = function (length) {
+  let text = "";
+  const possible =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
   for (var i = 0; i < length; i++) {
@@ -37,7 +37,8 @@ router.get("/:id", async (req, res) => {
 // Login - https://developer.spotify.com/documentation/web-api/tutorials/code-flow
 router.get("/login", async (req, res) => {
   var state = generateRandomString(16);
-  var scope = "user-read-private user-read-email user-read-playback-state";
+  var scope = "user-read-private user-read-email user-read-playback-state user-read-recently-played";
+
 
   res.redirect(
     "https://accounts.spotify.com/authorize?" +
@@ -46,39 +47,9 @@ router.get("/login", async (req, res) => {
         client_id: client_id,
         scope: scope,
         redirect_uri: redirect_uri,
-        state: state,
+        state: state
       })
   );
-});
-
-// Fetch access token after successfully logging in
-router.get("/callback", function (req, res) {
-  var code = req.query.code || null;
-  var state = req.query.state || null;
-
-  if (state === null) {
-    res.redirect(
-      "/#" +
-        querystring.stringify({
-          error: "state_mismatch",
-        })
-    );
-  } else {
-    var authOptions = {
-      url: "https://accounts.spotify.com/api/token",
-      form: {
-        code: code,
-        redirect_uri: redirect_uri,
-        grant_type: "authorization_code",
-      },
-      headers: {
-        Authorization:
-          "Basic " +
-          new Buffer.from(client_id + ":" + client_secret).toString("base64"),
-      },
-      json: true,
-    };
-  }
 });
 
 module.exports = router;
