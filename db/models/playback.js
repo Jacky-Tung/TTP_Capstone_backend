@@ -1,20 +1,30 @@
 const { DataTypes } = require("sequelize");
 const db = require("../db");
+const User = require("./user");
+const Song = require("./song");
 
 const Playback = db.define("Playback", {
   playback_id: {
     type: DataTypes.INTEGER,
+    // autoIncrement: true,
+    allowNull: false,
+    unique: true,
+  },
+  user_id: {
+    type: DataTypes.INTEGER,
     primaryKey: true,
-    autoIncrement: true,
-    allowNull: false,
+    references: {
+      model: User,
+      key: "user_id",
+    },
   },
-  latitude: {
-    type: DataTypes.DECIMAL(9, 6),
-    allowNull: false,
-  },
-  longitude: {
-    type: DataTypes.DECIMAL(9, 6),
-    allowNull: false,
+  song_id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    references: {
+      model: Song,
+      key: "song_id",
+    },
   },
 });
 
