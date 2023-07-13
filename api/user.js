@@ -1,16 +1,26 @@
 const express = require("express");
 const router = express.Router();
 const { User } = require("../db/models");
-// var request = require("request"); // "Request" library
-// var cors = require("cors");
-// var querystring = require("querystring");
-// var cookieParser = require("cookie-parser");
 
 // Get recently played songs - https://developer.spotify.com/documentation/web-api/reference/get-recently-played
 
 const client_id = process.env.CLIENT_ID;
 const client_secret = process.env.CLIENT_SECRET;
 const redirect_uri = process.env.REDIRECT_URI;
+
+/**
+ * Fetch all users
+ */
+router.get("/", async (req, res, next) => {
+  try {
+    const allUsers = await User.findAll();
+    allUsers
+      ? res.status(200).json(allUsers)
+      : res.status(404).send("User Listing Not Found");
+  } catch (error) {
+    next(error);
+  }
+});
 
 const generateRandomString = function (length) {
   let text = "";
