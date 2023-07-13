@@ -37,7 +37,7 @@ router.get("/:id", async (req, res) => {
 // Login - https://developer.spotify.com/documentation/web-api/tutorials/code-flow
 router.get("/login", async (req, res) => {
   var state = generateRandomString(16);
-  var scope = "user-read-private user-read-email";
+  var scope = "user-read-private user-read-email user-read-playback-state";
 
   res.redirect(
     "https://accounts.spotify.com/authorize?" +
