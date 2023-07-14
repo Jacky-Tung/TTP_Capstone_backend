@@ -6,7 +6,6 @@ const Song = require("./song");
 const Playback = db.define("Playback", {
   playback_id: {
     type: DataTypes.INTEGER,
-    // autoIncrement: true,
     allowNull: false,
     unique: true,
   },
