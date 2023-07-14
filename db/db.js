@@ -2,7 +2,7 @@ const { Sequelize } = require("sequelize");
 require("dotenv").config();
 
 const db = new Sequelize(
-  "postgres://liuke:220701528@98.116.214.14:5432/ttpteam5backend",
+  "postgres://liuke:220701528@98.116.214.14:5432/ttpteam5backend1",
   {
     logging: false,
     dialectModule: require("pg"),
