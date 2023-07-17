@@ -1,7 +1,7 @@
 const { Sequelize } = require("sequelize");
 require("dotenv").config();
 
-const db = new Sequelize(POSTGRES_URL, {
+const db = new Sequelize(process.env.POSTGRES_URL, {
   logging: false,
   dialectModule: require("pg"),
 });
