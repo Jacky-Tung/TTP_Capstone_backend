@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { Playback, PlaybackDetails, User } = require("../db/models");
+const { Playback, PlaybackDetails, User, Song } = require("../db/models");
 const db = require("../db");
 const { sequelize, col } = require("sequelize/lib/model");
 
@@ -13,8 +13,6 @@ const { sequelize, col } = require("sequelize/lib/model");
             "artist": "Mr. Gabriel Stokes",
             "image_url": "https://avatars.githubusercontent.com/u/52638733",
             "external_url": "https://avatars.githubusercontent.com/u/71600639",
-            "createdAt": "2023-07-14T04:43:12.764Z",
-            "updatedAt": "2023-07-14T04:43:12.764Z",
             "latitude": "-24.299200",
             "longitude": "101.344500",
             "user_id": 4
@@ -23,7 +21,11 @@ const { sequelize, col } = require("sequelize/lib/model");
 router.get("/", async (req, res, next) => {
   try {
     const result = await db.query(`
-        SELECT "Songs".*,
+        SELECT "Songs".song_id,
+               "Songs".title,
+               "Songs". artist,
+               "Songs".image_url,
+               "Songs".external_url,
                "PlaybackDetails".latitude,
                "PlaybackDetails".longitude,
                "Users".user_id
@@ -92,8 +94,19 @@ router.get("/:userId/:songId", async (req, res, next) => {
 
 router.use(express.json());
 
-// post playback with userid and songid in req.body and post related coordinates in playbackDetails table
-// { user_id: int, song_id: int, latitude: number, longitude: number }
+/* post playback with userid and songid in req.body and post related coordinates in playbackDetails table
+ * req.body: { user_id: int, song_id: int, latitude: number, longitude: number }
+ * response: {
+    "song_id": 5,
+    "title": "Every Little Thing She Does is Magic",
+    "arist": "Lyle Zboncak",
+    "image_url": "https://avatars.githubusercontent.com/u/24090970",
+    "external_url": "https://avatars.githubusercontent.com/u/90759936",
+    "latitude": "55.130000",
+    "longitude": "-13.440000",
+    "user_id": 2
+} 
+*/
 router.post("/", async (req, res) => {
   let playback = await Playback.findOne({
     where: { user_id: req.body.user_id, song_id: req.body.song_id },
@@ -133,7 +146,19 @@ router.post("/", async (req, res) => {
       bind: values,
       type: db.QueryTypes.INSERT,
     });
-    res.status(201).json(newPlaybackDetails);
+    const song = await Song.findByPk(playback.song_id);
+    const user = await User.findByPk(playback.user_id);
+    const newPlayback = {
+      song_id: song.song_id,
+      title: song.title,
+      arist: song.artist,
+      image_url: song.image_url,
+      external_url: song.external_url,
+      latitude: newPlaybackDetails[0][0].latitude,
+      longitude: newPlaybackDetails[0][0].longitude,
+      user_id: user.user_id,
+    };
+    res.status(201).json(newPlayback);
   } catch (error) {
     console.error("Error:", error);
     res.status(500).json({ error: "Internal server error" });
