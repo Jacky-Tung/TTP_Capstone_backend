@@ -99,10 +99,10 @@ const seed = async () => {
   console.log("User Ids", userIds);
 
   const seedPlayback = generatePlayback(10, songIds, userIds);
-  await Playback.bulkCreate(seedPlayback);
+  // await Playback.bulkCreate(seedPlayback);
 
   const seedPlaybackDetails = generatePlaybackDetails(10);
-  await PlaybackDetails.bulkCreate(seedPlaybackDetails);
+  // await PlaybackDetails.bulkCreate(seedPlaybackDetails);
 
   process.exit();
 };

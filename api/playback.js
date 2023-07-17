@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { Playback, PlaybackDetails } = require("../db/models");
+const { Playback, PlaybackDetails, User } = require("../db/models");
 const db = require("../db");
 const { sequelize, col } = require("sequelize/lib/model");
 
@@ -87,6 +87,56 @@ router.get("/:userId/:songId", async (req, res, next) => {
       : res.status(404).send("Playback Not Found");
   } catch (error) {
     next(error);
+  }
+});
+
+router.use(express.json());
+
+// post playback with userid and songid in req.body and post related coordinates in playbackDetails table
+// { user_id: int, song_id: int, latitude: number, longitude: number }
+router.post("/", async (req, res) => {
+  let playback = await Playback.findOne({
+    where: { user_id: req.body.user_id, song_id: req.body.song_id },
+  });
+  console.log(playback);
+  if (!playback) {
+    try {
+      const { user_id, song_id } = req.body;
+      console.log(req.body);
+
+      const user = await User.findByPk(user_id);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      const query =
+        'INSERT INTO "Playbacks" (user_id, song_id, "createdAt", "updatedAt") VALUES ($1, $2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) RETURNING *';
+      const values = [user_id, song_id];
+
+      const newPlayback = await db.query(query, {
+        bind: values,
+        type: db.QueryTypes.INSERT,
+      });
+      playback = newPlayback[0][0];
+    } catch (error) {
+      console.error("Error:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  }
+  try {
+    const { latitude, longitude } = req.body;
+    const query =
+      'INSERT INTO "PlaybackDetails" (playback_id, latitude, longitude, "createdAt", "updatedAt") VALUES ($1, $2, $3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) RETURNING *';
+    const values = [playback.playback_id, latitude, longitude];
+
+    const newPlaybackDetails = await db.query(query, {
+      bind: values,
+      type: db.QueryTypes.INSERT,
+    });
+    res.status(201).json(newPlaybackDetails);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
