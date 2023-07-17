@@ -13,8 +13,6 @@ const { sequelize, col } = require("sequelize/lib/model");
             "artist": "Mr. Gabriel Stokes",
             "image_url": "https://avatars.githubusercontent.com/u/52638733",
             "external_url": "https://avatars.githubusercontent.com/u/71600639",
-            "createdAt": "2023-07-14T04:43:12.764Z",
-            "updatedAt": "2023-07-14T04:43:12.764Z",
             "latitude": "-24.299200",
             "longitude": "101.344500",
             "user_id": 4
@@ -23,7 +21,11 @@ const { sequelize, col } = require("sequelize/lib/model");
 router.get("/", async (req, res, next) => {
   try {
     const result = await db.query(`
-        SELECT "Songs".*,
+        SELECT "Songs".song_id,
+               "Songs".title,
+               "Songs". artist,
+               "Songs".image_url,
+               "Songs".external_url,
                "PlaybackDetails".latitude,
                "PlaybackDetails".longitude,
                "Users".user_id
