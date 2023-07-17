@@ -60,4 +60,28 @@ router.post("/:id", async (req, res) => {
   }
 });
 
+// fetches current playing song
+router.get("/currently-playing", async (req, res) => {
+  try {
+    const songInfo = await fetch(
+      "https://api.spotify.com/v1/me/player/currently-playing",
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${req.query.accessToken}`,
+        },
+      }
+    );
+
+    if (songInfo.ok) {
+      const songData = await songInfo.json();
+      res.status(200).json(songData);
+    } else {
+      throw new Error("Failed to fetch current playing song.");
+    }
+  } catch (error) {
+    next(error);
+  }
+});
+
 module.exports = router;
