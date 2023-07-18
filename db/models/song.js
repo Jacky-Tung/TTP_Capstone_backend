@@ -5,6 +5,7 @@ const Song = db.define("Song", {
   song_id: {
     type: DataTypes.INTEGER,
     primaryKey: true,
+    autoIncrement: true,
   },
   title: {
     type: DataTypes.STRING,
