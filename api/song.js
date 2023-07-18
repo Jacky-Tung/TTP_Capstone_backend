@@ -24,25 +24,34 @@ router.get("/:id/info", async (req, res) => {
 });
 
 router.use(express.json());
-/* post a song by id */
-router.post("/:id", async (req, res) => {
-  try {
-    const id = req.params.id;
-    const { title, artist, image_url, external_url } = req.body;
-    console.log(req.body);
+// post a song
+router.post("/", async (req, res) => {
+  const song = await Song.findOne({
+    where: {
+      title: req.body.title,
+      artist: req.body.artist,
+    },
+  });
 
-    const newSong = await Song.create({
-      song_id: id,
-      title,
-      artist,
-      image_url,
-      external_url,
-    });
+  if (!song) {
+    try {
+      const { title, artist, image_url, external_url } = req.body;
+      console.log(req.body);
 
-    res.status(201).json(newSong);
-  } catch (error) {
-    console.error("Error:", error);
-    res.status(500).json({ error: "Internal server error" });
+      const newSong = await Song.create({
+        title,
+        artist,
+        image_url,
+        external_url,
+      });
+
+      res.status(201).json(newSong);
+    } catch (error) {
+      console.error("Error:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  } else {
+    res.status(409).json({ error: "Song already exists in database" });
   }
 });
 
