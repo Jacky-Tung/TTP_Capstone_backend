@@ -38,49 +38,34 @@ router.get("/", async (req, res, next) => {
 });
 
 router.use(express.json());
-/* post a song by id */
-router.post("/:id", async (req, res) => {
-  try {
-    const id = req.params.id;
-    const { title, artist, image_url, external_url } = req.body;
-    console.log(req.body);
+// post a song
+router.post("/", async (req, res) => {
+  const song = await Song.findOne({
+    where: {
+      title: req.body.title,
+      artist: req.body.artist,
+    },
+  });
 
-    const newSong = await Song.create({
-      song_id: id,
-      title,
-      artist,
-      image_url,
-      external_url,
-    });
+  if (!song) {
+    try {
+      const { title, artist, image_url, external_url } = req.body;
+      console.log(req.body);
 
-    res.status(201).json(newSong);
-  } catch (error) {
-    console.error("Error:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
+      const newSong = await Song.create({
+        title,
+        artist,
+        image_url,
+        external_url,
+      });
 
-// fetches current playing song
-router.get("/currently-playing", async (req, res) => {
-  try {
-    const songInfo = await fetch(
-      "https://api.spotify.com/v1/me/player/currently-playing",
-      {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${req.query.accessToken}`,
-        },
-      }
-    );
-
-    if (songInfo.ok) {
-      const songData = await songInfo.json();
-      res.status(200).json(songData);
-    } else {
-      throw new Error("Failed to fetch current playing song.");
+      res.status(201).json(newSong);
+    } catch (error) {
+      console.error("Error:", error);
+      res.status(500).json({ error: "Internal server error" });
     }
-  } catch (error) {
-    next(error);
+  } else {
+    res.status(409).json({ error: "Song already exists in database" });
   }
 });
 
