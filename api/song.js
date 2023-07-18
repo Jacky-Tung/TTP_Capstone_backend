@@ -23,20 +23,6 @@ router.get("/:id/info", async (req, res) => {
   }
 });
 
-/**
- * Fetches all songs
- */
-router.get("/", async (req, res, next) => {
-  try {
-    const allSongs = await Song.findAll();
-    allSongs
-      ? res.status(200).json(allSongs)
-      : res.status(404).send("Song Listing Not Found");
-  } catch (error) {
-    next(error);
-  }
-});
-
 router.use(express.json());
 /* post a song by id */
 router.post("/:id", async (req, res) => {
