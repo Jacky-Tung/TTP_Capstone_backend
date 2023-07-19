@@ -1,4 +1,5 @@
 const express = require("express");
+var querystring = require('querystring');
 const router = express.Router();
 const { User } = require("../db/models");
 
@@ -21,7 +22,7 @@ router.get("/", async (req, res, next) => {
 /**
  * Fetch user by id
  */
-router.get("/:id", async (req, res) => {
+router.get("/:id", async (req, res, next) => {
   try {
     const user = await User.findByPk(req.params.id);
     user

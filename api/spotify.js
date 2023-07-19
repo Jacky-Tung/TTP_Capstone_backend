@@ -47,16 +47,16 @@ router.get("/login", function (req, res) {
   // your router location requests authorization
   var scope =
     "user-read-private user-read-email user-read-playback-state user-read-currently-playing";
-  res.redirect(
+  const authURL = 
     "https://accounts.spotify.com/authorize?" +
       querystring.stringify({
         response_type: "code",
         client_id: client_id,
         scope: scope,
         redirect_uri: redirect_uri,
-        state: state,
-      })
-  );
+        state: state
+      });
+  res.json({ authURL });
 });
 
 /* response object for callback
@@ -74,9 +74,8 @@ router.get("/callback", function (req, res) {
 
   var code = req.query.code || null;
   var state = req.query.state || null;
-  var storedState = req.cookies ? req.cookies[stateKey] : null;
 
-  if (state === null || state !== storedState) {
+  if (state === null) {
     res.redirect(
       `/#` +
         querystring.stringify({
