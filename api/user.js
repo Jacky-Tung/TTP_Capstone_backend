@@ -1,4 +1,5 @@
 const express = require("express");
+var querystring = require('querystring');
 const router = express.Router();
 const { User } = require("../db/models");
 
@@ -33,7 +34,24 @@ const generateRandomString = function (length) {
   return text;
 };
 
-router.get("/:id", async (req, res) => {
+// Login - https://developer.spotify.com/documentation/web-api/tutorials/code-flow
+router.get("/login", async (req, res) => {
+  var state = generateRandomString(16);
+  var scope = "user-read-private user-read-email user-read-playback-state user-read-recently-played";
+  
+  const authURL = 
+    "https://accounts.spotify.com/authorize?" +
+      querystring.stringify({
+        response_type: "code",
+        client_id: client_id,
+        scope: scope,
+        redirect_uri: redirect_uri,
+        state: state
+      });
+  res.json({ authURL });
+});
+
+router.get("/:id", async (req, res, next) => {
   try {
     const user = await User.findByPk(req.params.id);
     user
@@ -42,24 +60,6 @@ router.get("/:id", async (req, res) => {
   } catch (err) {
     next(err);
   }
-});
-
-// Login - https://developer.spotify.com/documentation/web-api/tutorials/code-flow
-router.get("/login", async (req, res) => {
-  var state = generateRandomString(16);
-  var scope = "user-read-private user-read-email user-read-playback-state user-read-recently-played";
-
-
-  res.redirect(
-    "https://accounts.spotify.com/authorize?" +
-      querystring.stringify({
-        response_type: "code",
-        client_id: client_id,
-        scope: scope,
-        redirect_uri: redirect_uri,
-        state: state
-      })
-  );
 });
 
 module.exports = router;
