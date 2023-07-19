@@ -37,7 +37,6 @@ var generateRandomString = function (length) {
 var stateKey = "spotify_auth_state";
 
 router
-  .use(express.static(__dirname + "/public"))
   .use(cors())
   .use(cookieParser());
 
