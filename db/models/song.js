@@ -3,8 +3,9 @@ const db = require("../db");
 
 const Song = db.define("Song", {
   song_id: {
-    type: DataTypes.STRING,
+    type: DataTypes.INTEGER,
     primaryKey: true,
+    autoIncrement: true,
   },
   title: {
     type: DataTypes.STRING,
