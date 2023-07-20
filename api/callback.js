@@ -34,7 +34,8 @@ router.get("/", function (req, res) {
             });
             if (response.ok) {
                 const jsonResponse = await response.json();
-                console.log(jsonResponse);
+                console.log(jsonResponse.access_token);
+                res.redirect(`http://localhost:3000/songs`)
             } else {
                 console.log(response.statusText);
                 throw new Error(`Request failed! Status code: ${response.status} ${response.statusText}`);

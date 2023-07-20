@@ -44,29 +44,6 @@ router.get("/", async (req, res, next) => {
   }
 });
 
-/**
- * Fetch playback and playbackDetails by id
- */
-router.get("/:id", async (req, res, next) => {
-  try {
-    const playback = await Playback.findAll({
-      where: { playback_id: req.params.id },
-    });
-    const playbackDetails = await PlaybackDetails.findAll({
-      where: { playback_id: req.params.id },
-    });
-    const result = {
-      playback: playback,
-      playbackDetails: playbackDetails,
-    };
-    playback && playbackDetails
-      ? res.status(200).json(result)
-      : res.status(404).send("Playback Not Found");
-  } catch (error) {
-    next(error);
-  }
-});
-
 // fetch playback and playbackDetails by user id and song id
 router.get("/:userId/:songId", async (req, res, next) => {
   try {
@@ -76,17 +53,54 @@ router.get("/:userId/:songId", async (req, res, next) => {
     const playback = await Playback.findOne({
       where: { user_id: user_id, song_id: song_id },
     });
-    const playbackDetails = await PlaybackDetails.findAll({
+    const playbackDetails = await PlaybackDetails.findOne({
       where: { playback_id: playback.playback_id },
+    });
+    const song = await Song.findOne({
+      where: { song_id: song_id },
     });
 
     const result = {
-      playback: playback,
-      playbackDetails: playbackDetails,
+      song_id: song.song_id,
+      title: song.title,
+      artist: song.artist,
+      image_url: song.image_url,
+      external_url: song.external_url,
+      latitude: playbackDetails.latitude,
+      longitude: playbackDetails.longitude,
+      user_id: user_id,
     };
     playback && playbackDetails
       ? res.status(200).json(result)
       : res.status(404).send("Playback Not Found");
+  } catch (error) {
+    next(error);
+  }
+});
+
+// fetch personal playbacks by user id
+router.get("/:userId", async (req, res, next) => {
+  try {
+    const user_id = parseInt(req.params.userId);
+    const result = await db.query(`
+        SELECT "Songs".song_id,
+               "Songs".title,
+               "Songs". artist,
+               "Songs".image_url,
+               "Songs".external_url,
+               "PlaybackDetails".latitude,
+               "PlaybackDetails".longitude,
+               "Users".user_id
+        FROM "PlaybackDetails"
+        INNER JOIN "Playbacks"
+            ON "Playbacks".playback_id = "PlaybackDetails".playback_id
+        INNER JOIN "Songs"
+            ON "Playbacks".song_id = "Songs".song_id
+        INNER JOIN "Users"
+            ON "Playbacks".user_id = "Users".user_id
+        WHERE "Users".user_id = ${user_id}
+    `);
+    return res.status(200).json({ content: result[0] });
   } catch (error) {
     next(error);
   }
