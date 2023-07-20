@@ -47,8 +47,8 @@ router.get("/:id", async (req, res) => {
 // Login - https://developer.spotify.com/documentation/web-api/tutorials/code-flow
 router.get("/login", async (req, res) => {
   var state = generateRandomString(16);
-  var scope = "user-read-private user-read-email user-read-playback-state user-read-recently-played";
-
+  var scope =
+    "user-read-private user-read-email user-read-playback-state user-read-recently-played";
 
   res.redirect(
     "https://accounts.spotify.com/authorize?" +
@@ -57,9 +57,48 @@ router.get("/login", async (req, res) => {
         client_id: client_id,
         scope: scope,
         redirect_uri: redirect_uri,
-        state: state
+        state: state,
       })
   );
+});
+router.use(express.json());
+
+router.post("/", async (req, res) => {
+  const user = await User.findOne({
+    where: {
+      email: req.body.email,
+    },
+  });
+
+  if (!user) {
+    try {
+      const {
+        display_name,
+        email,
+        password,
+        profile_image_url,
+        access_token,
+        salt,
+      } = req.body;
+      console.log(req.body);
+
+      const newUser = await User.create({
+        display_name,
+        email,
+        password,
+        profile_image_url,
+        access_token,
+        salt,
+      });
+
+      res.status(201).json(newUser);
+    } catch (error) {
+      console.error("Error:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  } else {
+    res.status(409).json({ error: "User already exists in database" });
+  }
 });
 
 module.exports = router;

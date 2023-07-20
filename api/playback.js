@@ -142,6 +142,15 @@ router.post("/", async (req, res) => {
       'INSERT INTO "PlaybackDetails" (playback_id, latitude, longitude, "createdAt", "updatedAt") VALUES ($1, $2, $3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) RETURNING *';
     const values = [playback.playback_id, latitude, longitude];
 
+    // const res = await PlaybackDetails.findOne({
+    //   // where: { user_id: req.body.user_id, song_id: req.body.song_id },
+    //   where: {
+    //     playback_id: playback.playback_id,
+    //     latitude: latitude,
+    //     longitude: longitude,
+    //   },
+    // });
+
     const newPlaybackDetails = await db.query(query, {
       bind: values,
       type: db.QueryTypes.INSERT,
