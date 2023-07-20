@@ -22,6 +22,18 @@ const User = db.define("User", {
     type: DataTypes.STRING,
     allowNull: false,
   },
+  access_token: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  refresh_token: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  spotify_id: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  }
 });
 
 module.exports = User;

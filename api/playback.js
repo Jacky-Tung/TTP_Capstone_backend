@@ -1,4 +1,5 @@
 const express = require("express");
+const axios = require("axios");
 const router = express.Router();
 const { Playback, PlaybackDetails, User, Song } = require("../db/models");
 const db = require("../db");
@@ -41,6 +42,40 @@ router.get("/", async (req, res, next) => {
     return res.status(200).json({ content: result[0] });
   } catch (error) {
     next(error);
+  }
+});
+
+router.get("/currently-playing", async (req, res) => {
+  try {
+    // const accessToken = req.cookies.access_token; // Get the user's access token from the cookie
+    const userId = 11; 
+    const user = await User.findByPk(userId);
+
+    if (!user || !user.access_token) {
+      return res.status(404).json({ error: "User not found or missing access token" });
+    }
+
+    const accessToken = user.access_token;
+    const response = await axios.get(`https://api.spotify.com/v1/me/player/currently-playing`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    }); 
+    console.log(response.data.item)
+    const currentlyPlayingTrack = response.data.item;
+    const progress = response.data.progress_ms;
+
+    res.json({
+      accessToken, 
+      trackName: currentlyPlayingTrack.name,
+      artistName: currentlyPlayingTrack.artists[0].name,
+      progress,
+      trackUrl: currentlyPlayingTrack.external_urls.spotify, 
+      previewUrl: currentlyPlayingTrack.preview_url
+    });
+  } catch (error) {
+    console.log("Error retrieving currently playing track:");
+    res.status(500).json({ error: "An error occurred" });
   }
 });
 
