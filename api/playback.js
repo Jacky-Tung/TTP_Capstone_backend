@@ -53,13 +53,22 @@ router.get("/:userId/:songId", async (req, res, next) => {
     const playback = await Playback.findOne({
       where: { user_id: user_id, song_id: song_id },
     });
-    const playbackDetails = await PlaybackDetails.findAll({
+    const playbackDetails = await PlaybackDetails.findOne({
       where: { playback_id: playback.playback_id },
+    });
+    const song = await Song.findOne({
+      where: { song_id: song_id },
     });
 
     const result = {
-      playback: playback,
-      playbackDetails: playbackDetails,
+      song_id: song.song_id,
+      title: song.title,
+      artist: song.artist,
+      image_url: song.image_url,
+      external_url: song.external_url,
+      latitude: playbackDetails.latitude,
+      longitude: playbackDetails.longitude,
+      user_id: user_id,
     };
     playback && playbackDetails
       ? res.status(200).json(result)
