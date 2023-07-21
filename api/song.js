@@ -1,26 +1,26 @@
 const express = require("express");
 const router = express.Router();
+const request = require("request");
 const { Song } = require("../db/models");
+router.use(express.json());
 
 // https://developer.spotify.com/documentation/web-api/tutorials/implicit-flow
 
-// fetches info about a song
-router.get("/:id/info", async (req, res) => {
-  try {
-    const songId = req.params.id;
-    const songInfo = await fetch(
-      `https://api.spotify.com/v1/tracks/${songId}`,
-      {
-        method: "GET",
-        headers: {
-          Authorization: Bearer`${req.params.accessToken}`, // insert access token here
-        },
-      }
-    ).json();
-    // songInfo ? res.status(200);
-  } catch {
-    next(err);
-  }
+
+// fetches currently playing song
+router.get("/currently-playing", async (req, res) => {
+  const fetch = {
+    url: "https://api.spotify.com/v1/me/player/currently-playing",
+    headers: {
+      Authorization: `Bearer ` + req.query.access_token,
+    },
+    json: true,
+  };
+
+  request.get(fetch, function (error, response, body) {
+    console.log(req.query.access_token);
+    res.json(body);
+  });
 });
 
 /**
@@ -37,7 +37,6 @@ router.get("/", async (req, res, next) => {
   }
 });
 
-router.use(express.json());
 // post a song
 router.post("/", async (req, res) => {
   const song = await Song.findOne({
