@@ -49,7 +49,7 @@ router.post("/", async (req, res) => {
 
   if (!song) {
     try {
-      const { title, artist, image_url, external_url } = req.body;
+      const { title, artist, image_url, external_url, preview_url } = req.body;
       console.log(req.body);
 
       const newSong = await Song.create({
@@ -57,6 +57,7 @@ router.post("/", async (req, res) => {
         artist,
         image_url,
         external_url,
+        preview_url,
       });
 
       res.status(201).json(newSong);
