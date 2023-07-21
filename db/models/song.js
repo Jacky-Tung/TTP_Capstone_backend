@@ -23,6 +23,10 @@ const Song = db.define("Song", {
     type: DataTypes.STRING,
     allowNull: false,
   },
+  preview_url: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
 });
 
 module.exports = Song;

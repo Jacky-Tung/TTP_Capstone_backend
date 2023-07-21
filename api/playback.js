@@ -23,9 +23,10 @@ router.get("/", async (req, res, next) => {
     const result = await db.query(`
         SELECT "Songs".song_id,
                "Songs".title,
-               "Songs". artist,
+               "Songs".artist,
                "Songs".image_url,
                "Songs".external_url,
+               "Songs".preview_url,
                "PlaybackDetails".latitude,
                "PlaybackDetails".longitude,
                "Users".user_id
@@ -85,9 +86,10 @@ router.get("/:userId", async (req, res, next) => {
     const result = await db.query(`
         SELECT "Songs".song_id,
                "Songs".title,
-               "Songs". artist,
+               "Songs".artist,
                "Songs".image_url,
                "Songs".external_url,
+               "Songs".preview_url,
                "PlaybackDetails".latitude,
                "PlaybackDetails".longitude,
                "Users".user_id
@@ -177,6 +179,7 @@ router.post("/", async (req, res) => {
       arist: song.artist,
       image_url: song.image_url,
       external_url: song.external_url,
+      preview_url: song.preview_url,
       latitude: newPlaybackDetails[0][0].latitude,
       longitude: newPlaybackDetails[0][0].longitude,
       user_id: user.user_id,
