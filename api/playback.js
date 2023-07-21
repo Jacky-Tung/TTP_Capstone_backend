@@ -24,9 +24,10 @@ router.get("/", async (req, res, next) => {
     const result = await db.query(`
         SELECT "Songs".song_id,
                "Songs".title,
-               "Songs". artist,
+               "Songs".artist,
                "Songs".image_url,
                "Songs".external_url,
+               "Songs".preview_url,
                "PlaybackDetails".latitude,
                "PlaybackDetails".longitude,
                "Users".user_id
@@ -120,9 +121,10 @@ router.get("/:userId", async (req, res, next) => {
     const result = await db.query(`
         SELECT "Songs".song_id,
                "Songs".title,
-               "Songs". artist,
+               "Songs".artist,
                "Songs".image_url,
                "Songs".external_url,
+               "Songs".preview_url,
                "PlaybackDetails".latitude,
                "PlaybackDetails".longitude,
                "Users".user_id
@@ -191,6 +193,15 @@ router.post("/", async (req, res) => {
       'INSERT INTO "PlaybackDetails" (playback_id, latitude, longitude, "createdAt", "updatedAt") VALUES ($1, $2, $3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) RETURNING *';
     const values = [playback.playback_id, latitude, longitude];
 
+    // const res = await PlaybackDetails.findOne({
+    //   // where: { user_id: req.body.user_id, song_id: req.body.song_id },
+    //   where: {
+    //     playback_id: playback.playback_id,
+    //     latitude: latitude,
+    //     longitude: longitude,
+    //   },
+    // });
+
     const newPlaybackDetails = await db.query(query, {
       bind: values,
       type: db.QueryTypes.INSERT,
@@ -203,6 +214,7 @@ router.post("/", async (req, res) => {
       arist: song.artist,
       image_url: song.image_url,
       external_url: song.external_url,
+      preview_url: song.preview_url,
       latitude: newPlaybackDetails[0][0].latitude,
       longitude: newPlaybackDetails[0][0].longitude,
       user_id: user.user_id,

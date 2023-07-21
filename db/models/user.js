@@ -5,6 +5,7 @@ const User = db.define("User", {
   user_id: {
     type: DataTypes.INTEGER,
     primaryKey: true,
+    autoIncrement: true,
   },
   display_name: {
     type: DataTypes.STRING,
@@ -15,6 +16,14 @@ const User = db.define("User", {
     allowNull: false,
   },
   password: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  profile_image_url: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  access_token: {
     type: DataTypes.STRING,
     allowNull: false,
   },

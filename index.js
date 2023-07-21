@@ -1,11 +1,11 @@
 const express = require("express");
 const db = require("./db");
 const bodyParser = require("body-parser");
-const cors = require("cors")
+const cors = require("cors");
 const app = express();
 
 // Mount on API
-app.use(cors()); 
+app.use(cors());
 app.use("/api", require("./api"));
 app.use(bodyParser.json());
 

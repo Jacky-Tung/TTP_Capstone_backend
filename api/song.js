@@ -1,29 +1,42 @@
 const express = require("express");
 const router = express.Router();
+const request = require("request");
 const { Song } = require("../db/models");
+router.use(express.json());
 
 // https://developer.spotify.com/documentation/web-api/tutorials/implicit-flow
 
-// fetches info about a song
-router.get("/:id/info", async (req, res) => {
+
+// fetches currently playing song
+router.get("/currently-playing", async (req, res) => {
+  const fetch = {
+    url: "https://api.spotify.com/v1/me/player/currently-playing",
+    headers: {
+      Authorization: `Bearer ` + req.query.access_token,
+    },
+    json: true,
+  };
+
+  request.get(fetch, function (error, response, body) {
+    console.log(req.query.access_token);
+    res.json(body);
+  });
+});
+
+/**
+ * Fetches all songs
+ */
+router.get("/", async (req, res, next) => {
   try {
-    const songId = req.params.id;
-    const songInfo = await fetch(
-      `https://api.spotify.com/v1/tracks/${songId}`,
-      {
-        method: "GET",
-        headers: {
-          Authorization: Bearer`${req.params.accessToken}`, // insert access token here
-        },
-      }
-    ).json();
-    // songInfo ? res.status(200);
-  } catch {
-    next(err);
+    const allSongs = await Song.findAll();
+    allSongs
+      ? res.status(200).json(allSongs)
+      : res.status(404).send("Song Listing Not Found");
+  } catch (error) {
+    next(error);
   }
 });
 
-router.use(express.json());
 // post a song
 router.post("/", async (req, res) => {
   const song = await Song.findOne({
@@ -35,7 +48,7 @@ router.post("/", async (req, res) => {
 
   if (!song) {
     try {
-      const { title, artist, image_url, external_url } = req.body;
+      const { title, artist, image_url, external_url, preview_url } = req.body;
       console.log(req.body);
 
       const newSong = await Song.create({
@@ -43,6 +56,7 @@ router.post("/", async (req, res) => {
         artist,
         image_url,
         external_url,
+        preview_url,
       });
 
       res.status(201).json(newSong);
