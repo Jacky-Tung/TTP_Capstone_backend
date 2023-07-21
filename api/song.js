@@ -6,7 +6,6 @@ router.use(express.json());
 
 // https://developer.spotify.com/documentation/web-api/tutorials/implicit-flow
 
-
 // fetches currently playing song
 router.get("/currently-playing", async (req, res) => {
   const fetch = {
@@ -17,9 +16,47 @@ router.get("/currently-playing", async (req, res) => {
     json: true,
   };
 
-  request.get(fetch, function (error, response, body) {
-    console.log(req.query.access_token);
-    res.json(body);
+  request.get(fetch, async function (error, response, body) {
+    if (error) {
+      console.error("Error fetching currently playing song:", error);
+      return res.status(500).json({
+        error: "Something went wrong while fetching currently playing song.",
+      });
+    }
+
+    if (body && body.item) {
+      const song = body.item;
+
+      // checks if song is already in db
+      const existingSong = await Song.findOne({
+        where: {
+          title: song.name,
+          artist: song.artists[0].name,
+        },
+      });
+
+      if (!existingSong) {
+        try {
+          const newSong = await Song.create({
+            title: song.name,
+            artist: song.artists[0].name,
+            image_url: song.album.images[0].url,
+            external_url: song.external_urls.spotify,
+            preview_url: song.preview_url || null,
+          });
+
+          res.status(201).json(newSong);
+        } catch (error) {
+          console.error("Error creating new song:", error);
+          return res.status(500).json({ error: "Something went wrong." });
+        }
+      } else {
+        console.log("Song already exists in the database:");
+        res.json(existingSong);
+      }
+    } else {
+      return res.status(404).json({ error: "No song currently playing." });
+    }
   });
 });
 
