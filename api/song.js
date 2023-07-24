@@ -60,6 +60,27 @@ router.get("/currently-playing", async (req, res) => {
   });
 });
 
+// fetches playback state and timestamp
+router.get("/playback-state", async (req,res) => {
+  const fetch = {
+    url: "https://api.spotify.com/v1/me/player",
+    headers: {
+      Authorization: `Bearer ` + req.query.access_token,
+    },
+    json: true,
+  };
+
+  request.get(fetch, async function (error, response, body) {
+    if(error){
+      console.error(error);
+      return res.status(500).json({
+        error: "Something went wrong while fetching playback state.",
+      });
+    }
+    res.json({ is_playing: body.is_playing, timestamp: body.timestamp }); 
+  });  
+})
+
 /**
  * Fetches all songs
  */
