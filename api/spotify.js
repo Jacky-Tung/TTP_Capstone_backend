@@ -13,6 +13,7 @@ var request = require("request"); // "Request" library
 var cors = require("cors");
 var querystring = require("querystring");
 var cookieParser = require("cookie-parser");
+const { User } = require("../db/models");
 
 var client_id = "0b6fbd37eea445a29e484f2eb8d51b1b"; // Your client id
 var client_secret = "189407c29ebf4db6b099240176de6eac"; // Your secret
@@ -102,7 +103,7 @@ router.get("/callback", function (req, res) {
     request.post(authOptions, function (error, response, body) {
       if (!error && response.statusCode === 200) {
         var access_token = body.access_token,
-          refresh_token = body.refresh_token;
+            refresh_token = body.refresh_token;
 
         var options = {
           url: "https://api.spotify.com/v1/me",
@@ -111,18 +112,38 @@ router.get("/callback", function (req, res) {
         };
 
         // use the access token to access the Spotify Web API
-        request.get(options, function (error, response, body) {
-          console.log(body);
+        request.get(options, async function (error, response, body) {
+          if (!error && response.statusCode === 200) {
+            // Store the user information in the database
+            const { id, display_name, email, images } = body;
+            try {
+              // Check if the user already exists in the database
+              let user = await User.findOne({ where: { email : email } });
+                // Update the existing user record with the new tokens and other info about the user's spotify account
+                user.display_name = display_name; 
+                user.profile_image_url = images[0].url; 
+                user.access_token = access_token;
+                user.refresh_token = refresh_token;
+                await user.save();
+              let userId = user.user_id; 
+              // Redirect the user to the desired location
+              res.redirect(
+                `http://localhost:3000/#` +
+                  querystring.stringify({
+                    userId
+                  })
+              );
+            } catch (err) {
+              console.error("Error storing user information:", err);
+              res.redirect(
+                `http://localhost:3000/#` +
+                  querystring.stringify({
+                    error: "invalid_token",
+                  })
+              );
+            }
+          }
         });
-
-        // we can also pass the token to the browser to make requests from there
-        res.redirect(
-          `http://localhost:3000/#` +
-            querystring.stringify({
-              access_token: access_token,
-              refresh_token: refresh_token,
-            })
-        );
       } else {
         res.redirect(
           `http://localhost:3000/#` +

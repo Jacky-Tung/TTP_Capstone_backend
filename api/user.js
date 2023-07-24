@@ -46,22 +46,16 @@ router.post("/", async (req, res) => {
   if (!user) {
     try {
       const {
+        user_id, 
         display_name,
         email,
-        password,
-        profile_image_url,
-        access_token,
-        salt,
       } = req.body;
       console.log(req.body);
 
       const newUser = await User.create({
+        user_id, 
         display_name,
         email,
-        password,
-        profile_image_url,
-        access_token,
-        salt,
       });
 
       res.status(201).json(newUser);

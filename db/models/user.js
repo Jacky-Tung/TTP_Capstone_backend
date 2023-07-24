@@ -3,9 +3,8 @@ const db = require("../db");
 
 const User = db.define("User", {
   user_id: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.STRING,
     primaryKey: true,
-    autoIncrement: true,
   },
   display_name: {
     type: DataTypes.STRING,
@@ -17,20 +16,24 @@ const User = db.define("User", {
   },
   password: {
     type: DataTypes.STRING,
-    allowNull: false,
+    allowNull: true,
   },
   profile_image_url: {
     type: DataTypes.STRING,
-    allowNull: false,
-  },
+    allowNull: true,
+  }, 
   access_token: {
     type: DataTypes.STRING,
-    allowNull: false,
+    allowNull: true,
   },
-  salt: {
+  refresh_token: {
     type: DataTypes.STRING,
-    allowNull: false,
+    allowNull: true,
   },
+  spotify_id: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  }
 });
 
 module.exports = User;

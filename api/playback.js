@@ -1,4 +1,5 @@
 const express = require("express");
+const axios = require("axios");
 const router = express.Router();
 const { Playback, PlaybackDetails, User, Song } = require("../db/models");
 const db = require("../db");
@@ -18,30 +19,64 @@ const { sequelize, col } = require("sequelize/lib/model");
             "user_id": 4
         },]
  */
-router.get("/", async (req, res, next) => {
-  try {
-    const result = await db.query(`
-        SELECT "Songs".song_id,
-               "Songs".title,
-               "Songs".artist,
-               "Songs".image_url,
-               "Songs".external_url,
-               "Songs".preview_url,
-               "PlaybackDetails".latitude,
-               "PlaybackDetails".longitude,
-               "Users".user_id
-        FROM "PlaybackDetails"
-        INNER JOIN "Playbacks"
-            ON "Playbacks".playback_id = "PlaybackDetails".playback_id
-        INNER JOIN "Songs"
-            ON "Playbacks".song_id = "Songs".song_id
-        INNER JOIN "Users"
-            ON "Playbacks".user_id = "Users".user_id
-    `);
+// router.get("/", async (req, res, next) => {
+//   try {
+//     const result = await db.query(`
+//         SELECT "Songs".song_id,
+//                "Songs".title,
+//                "Songs".artist,
+//                "Songs".image_url,
+//                "Songs".external_url,
+//                "Songs".preview_url,
+//                "PlaybackDetails".latitude,
+//                "PlaybackDetails".longitude,
+//                "Users".user_id
+//         FROM "PlaybackDetails"
+//         INNER JOIN "Playbacks"
+//             ON "Playbacks".playback_id = "PlaybackDetails".playback_id
+//         INNER JOIN "Songs"
+//             ON "Playbacks".song_id = "Songs".song_id
+//         INNER JOIN "Users"
+//             ON "Playbacks".user_id = "Users".user_id
+//     `);
 
-    return res.status(200).json({ content: result[0] });
+//     return res.status(200).json({ content: result[0] });
+//   } catch (error) {
+//     next(error);
+//   }
+// });
+
+router.get("/currently-playing", async (req, res) => {
+  try {
+    // const accessToken = req.cookies.access_token; // Get the user's access token from the cookie
+    const userId = 11; 
+    const user = await User.findByPk(userId);
+
+    if (!user || !user.access_token) {
+      return res.status(404).json({ error: "User not found or missing access token" });
+    }
+
+    const accessToken = user.access_token;
+    const response = await axios.get(`https://api.spotify.com/v1/me/player/currently-playing`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    }); 
+    console.log(response.data.item)
+    const currentlyPlayingTrack = response.data.item;
+    const progress = response.data.progress_ms;
+
+    res.json({
+      accessToken, 
+      trackName: currentlyPlayingTrack.name,
+      artistName: currentlyPlayingTrack.artists[0].name,
+      progress,
+      trackUrl: currentlyPlayingTrack.external_urls.spotify, 
+      previewUrl: currentlyPlayingTrack.preview_url
+    });
   } catch (error) {
-    next(error);
+    console.log("Error retrieving currently playing track:");
+    res.status(500).json({ error: "An error occurred" });
   }
 });
 
