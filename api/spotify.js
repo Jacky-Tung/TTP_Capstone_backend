@@ -103,7 +103,7 @@ router.get("/callback", function (req, res) {
     request.post(authOptions, function (error, response, body) {
       if (!error && response.statusCode === 200) {
         var access_token = body.access_token,
-          refresh_token = body.refresh_token;
+            refresh_token = body.refresh_token;
 
         var options = {
           url: "https://api.spotify.com/v1/me",
@@ -115,35 +115,22 @@ router.get("/callback", function (req, res) {
         request.get(options, async function (error, response, body) {
           if (!error && response.statusCode === 200) {
             // Store the user information in the database
-            const { id, display_name, email } = body;
+            const { id, display_name, email, images } = body;
             try {
               // Check if the user already exists in the database
-              let user = await User.findOne({ where: { spotify_id: id } });
-              
-              if (!user) {
-                // Create a new user record in the database
-                user = await User.create({
-                  user_id: 11, 
-                  password: generateRandomString(10), 
-                  salt: generateRandomString(10), 
-                  spotify_id: id,
-                  display_name: display_name,
-                  email: email,
-                  access_token: access_token,
-                  refresh_token: refresh_token,
-                });
-              } else {
-                // Update the existing user record with the new tokens
+              let user = await User.findOne({ where: { email : email } });
+                // Update the existing user record with the new tokens and other info about the user's spotify account
+                user.display_name = display_name; 
+                user.profile_image_url = images[0].url; 
                 user.access_token = access_token;
                 user.refresh_token = refresh_token;
                 await user.save();
-              }
+              let userId = user.user_id; 
               // Redirect the user to the desired location
               res.redirect(
                 `http://localhost:3000/#` +
                   querystring.stringify({
-                    access_token: access_token,
-                    refresh_token: refresh_token,
+                    userId
                   })
               );
             } catch (err) {

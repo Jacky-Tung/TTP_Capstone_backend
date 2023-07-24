@@ -11,7 +11,7 @@ const Playback = db.define("Playback", {
     autoIncrement: true,
   },
   user_id: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.STRING,
     primaryKey: true,
     references: {
       model: User,

@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const request = require("request");
+const { User } = require("../db/models");
 const { Song } = require("../db/models");
 router.use(express.json());
 
@@ -8,78 +9,92 @@ router.use(express.json());
 
 // fetches currently playing song
 router.get("/currently-playing", async (req, res) => {
-  const fetch = {
-    url: "https://api.spotify.com/v1/me/player/currently-playing",
-    headers: {
-      Authorization: `Bearer ` + req.query.access_token,
-    },
-    json: true,
-  };
+  const userId = req.query.user_id;
+  try {
+    // Fetch the user from the database based on the provided user ID
+    const user = await User.findOne({ where: { user_id : userId } });
 
-  request.get(fetch, async function (error, response, body) {
-    if (error) {
-      console.error("Error fetching currently playing song:", error);
-      return res.status(500).json({
-        error: "Something went wrong while fetching currently playing song.",
-      });
+    if (!user) {
+      return res.status(404).json({ error: "User not found." });
     }
 
-    if (body && body.item) {
-      const song = body.item;
+    const fetch = {
+      url: "https://api.spotify.com/v1/me/player/currently-playing",
+      headers: {
+        Authorization: `Bearer ` + user.access_token, // Use the user's accessToken for Spotify API request
+      },
+      json: true,
+    };
 
-      // checks if song is already in db
-      const existingSong = await Song.findOne({
-        where: {
-          title: song.name,
-          artist: song.artists[0].name,
-        },
-      });
+    request.get(fetch, async function (error, response, body) {
+      if (error) {
+        console.error("Error fetching currently playing song:", error);
+        return res.status(500).json({
+          error: "Something went wrong while fetching currently playing song.",
+        });
+      }
 
-      if (!existingSong) {
-        try {
-          const newSong = await Song.create({
-            title: song.name,
-            artist: song.artists[0].name,
-            image_url: song.album.images[0].url,
-            external_url: song.external_urls.spotify,
-            preview_url: song.preview_url || null,
-          });
+      if (body && body.item) {
+        const song = body.item;
 
-          res.status(201).json(newSong);
-        } catch (error) {
-          console.error("Error creating new song:", error);
-          return res.status(500).json({ error: "Something went wrong." });
+        // checks if song is already in db
+        const existingSong = await Song.findOne({
+            where: {
+              title: song.name,
+              artist: song.artists[0].name,
+            },
+        });
+
+        if (!existingSong) {
+          try {
+            const newSong = await Song.create({
+              title: song.name,
+              artist: song.artists[0].name,
+              image_url: song.album.images[0].url,
+              external_url: song.external_urls.spotify,
+              preview_url: song.preview_url || null,
+            });
+            res.status(201).json(newSong);
+          } catch (error) {
+            console.error("Error creating new song:", error);
+            return res.status(500).json({ error: "Something went wrong." });
+          }
+        } else {
+          console.log("Song already exists in the database:");
+          res.json(existingSong);
         }
       } else {
-        console.log("Song already exists in the database:");
-        res.json(existingSong);
+        return res.status(404).json({ error: "No song currently playing." });
       }
-    } else {
-      return res.status(404).json({ error: "No song currently playing." });
-    }
-  });
+    });
+  } catch (error) {
+    console.error("Error fetching user or currently playing song:", error);
+    return res.status(500).json({
+      error: "Something went wrong while fetching currently playing song.",
+    });
+  }
 });
 
 // fetches playback state and timestamp
-router.get("/playback-state", async (req,res) => {
-  const fetch = {
-    url: "https://api.spotify.com/v1/me/player",
-    headers: {
-      Authorization: `Bearer ` + req.query.access_token,
-    },
-    json: true,
-  };
+// router.get("/playback-state", async (req,res) => {
+//   const fetch = {
+//     url: "https://api.spotify.com/v1/me/player",
+//     headers: {
+//       Authorization: `Bearer ` + req.query.access_token,
+//     },
+//     json: true,
+//   };
 
-  request.get(fetch, async function (error, response, body) {
-    if(error){
-      console.error(error);
-      return res.status(500).json({
-        error: "Something went wrong while fetching playback state.",
-      });
-    }
-    res.json({ is_playing: body.is_playing, timestamp: body.timestamp }); 
-  });  
-})
+//   request.get(fetch, async function (error, response, body) {
+//     if(error){
+//       console.error(error);
+//       return res.status(500).json({
+//         error: "Something went wrong while fetching playback state.",
+//       });
+//     }
+//     res.json({ is_playing: body.is_playing, timestamp: body.timestamp }); 
+//   });  
+// })
 
 /**
  * Fetches all songs
