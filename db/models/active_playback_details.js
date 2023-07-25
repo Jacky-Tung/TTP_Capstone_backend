@@ -1,6 +1,7 @@
 const { DataTypes } = require("sequelize");
 const db = require("../db");
 const Playback = require("./playback");
+const User = require("./user");
 
 const ActivePlaybackDetails = db.define("ActivePlaybackDetails", {
   playback_id: {
@@ -9,6 +10,13 @@ const ActivePlaybackDetails = db.define("ActivePlaybackDetails", {
     references: {
       model: Playback,
       key: "playback_id",
+    },
+  },
+  user_id: {
+    type: DataTypes.STRING,
+    references: {
+      model: User,
+      key: "user_id",
     },
   },
   latitude: {
