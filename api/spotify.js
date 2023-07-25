@@ -95,7 +95,7 @@ router.get("/callback", function (req, res) {
       headers: {
         Authorization:
           "Basic " +
-          new Buffer(client_id + ":" + client_secret).toString("base64"),
+          new Buffer.from(client_id + ":" + client_secret).toString("base64"),
       },
       json: true,
     };
@@ -121,7 +121,8 @@ router.get("/callback", function (req, res) {
               let user = await User.findOne({ where: { email : email } });
                 // Update the existing user record with the new tokens and other info about the user's spotify account
                 user.display_name = display_name; 
-                user.profile_image_url = images[0].url; 
+                if(images[0])
+                  user.profile_image_url = images[0].url; 
                 user.access_token = access_token;
                 user.refresh_token = refresh_token;
                 await user.save();
