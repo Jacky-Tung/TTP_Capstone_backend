@@ -1,9 +1,18 @@
 const express = require("express");
 const axios = require("axios");
 const router = express.Router();
-const { Playback, PlaybackDetails, User, Song } = require("../db/models");
+const {
+  Playback,
+  PlaybackDetails,
+  User,
+  Song,
+  ActivePlaybackDetails,
+} = require("../db/models");
 const db = require("../db");
 const { sequelize, col } = require("sequelize/lib/model");
+
+// Approx 1 mile in terms of lat & long
+const GEOLOCATION_OFFEST = 0.01666666666;
 
 /**
  * Fetch all playbacks and playbackDetails
@@ -19,60 +28,65 @@ const { sequelize, col } = require("sequelize/lib/model");
             "user_id": 4
         },]
  */
-// router.get("/", async (req, res, next) => {
-//   try {
-//     const result = await db.query(`
-//         SELECT "Songs".song_id,
-//                "Songs".title,
-//                "Songs".artist,
-//                "Songs".image_url,
-//                "Songs".external_url,
-//                "Songs".preview_url,
-//                "PlaybackDetails".latitude,
-//                "PlaybackDetails".longitude,
-//                "Users".user_id
-//         FROM "PlaybackDetails"
-//         INNER JOIN "Playbacks"
-//             ON "Playbacks".playback_id = "PlaybackDetails".playback_id
-//         INNER JOIN "Songs"
-//             ON "Playbacks".song_id = "Songs".song_id
-//         INNER JOIN "Users"
-//             ON "Playbacks".user_id = "Users".user_id
-//     `);
+router.get("/", async (req, res, next) => {
+  try {
+    const result = await db.query(`
+        SELECT "Songs".song_id,
+               "Songs".title,
+               "Songs".artist,
+               "Songs".image_url,
+               "Songs".external_url,
+               "Songs".preview_url,
+               "PlaybackDetails".latitude,
+               "PlaybackDetails".longitude,
+               "Users".user_id
+        FROM "PlaybackDetails"
+        INNER JOIN "Playbacks"
+            ON "Playbacks".playback_id = "PlaybackDetails".playback_id
+        INNER JOIN "Songs"
+            ON "Playbacks".song_id = "Songs".song_id
+        INNER JOIN "Users"
+            ON "Playbacks".user_id = "Users".user_id
+    `);
 
-//     return res.status(200).json({ content: result[0] });
-//   } catch (error) {
-//     next(error);
-//   }
-// });
+    return res.status(200).json({ content: result[0] });
+  } catch (error) {
+    next(error);
+  }
+});
 
 router.get("/currently-playing", async (req, res) => {
   try {
     // const accessToken = req.cookies.access_token; // Get the user's access token from the cookie
-    const userId = 11; 
+    const userId = 11;
     const user = await User.findByPk(userId);
 
     if (!user || !user.access_token) {
-      return res.status(404).json({ error: "User not found or missing access token" });
+      return res
+        .status(404)
+        .json({ error: "User not found or missing access token" });
     }
 
     const accessToken = user.access_token;
-    const response = await axios.get(`https://api.spotify.com/v1/me/player/currently-playing`, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    }); 
-    console.log(response.data.item)
+    const response = await axios.get(
+      `https://api.spotify.com/v1/me/player/currently-playing`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    );
+    console.log(response.data.item);
     const currentlyPlayingTrack = response.data.item;
     const progress = response.data.progress_ms;
 
     res.json({
-      accessToken, 
+      accessToken,
       trackName: currentlyPlayingTrack.name,
       artistName: currentlyPlayingTrack.artists[0].name,
       progress,
-      trackUrl: currentlyPlayingTrack.external_urls.spotify, 
-      previewUrl: currentlyPlayingTrack.preview_url
+      trackUrl: currentlyPlayingTrack.external_urls.spotify,
+      previewUrl: currentlyPlayingTrack.preview_url,
     });
   } catch (error) {
     console.log("Error retrieving currently playing track:");
@@ -162,68 +176,124 @@ router.post("/", async (req, res) => {
   let playback = await Playback.findOne({
     where: { user_id: req.body.user_id, song_id: req.body.song_id },
   });
-  console.log(playback);
+
+  const { user_id, song_id } = req.body;
+
   if (!playback) {
     try {
-      const { user_id, song_id } = req.body;
-      console.log(req.body);
-
       const user = await User.findByPk(user_id);
       if (!user) {
         return res.status(404).json({ error: "User not found" });
       }
 
-      const query =
-        'INSERT INTO "Playbacks" (user_id, song_id, "createdAt", "updatedAt") VALUES ($1, $2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) RETURNING *';
-      const values = [user_id, song_id];
-
-      const newPlayback = await db.query(query, {
-        bind: values,
-        type: db.QueryTypes.INSERT,
+      playback = await Playback.create({
+        user_id,
+        song_id,
       });
-      playback = newPlayback[0][0];
     } catch (error) {
       console.error("Error:", error);
-      res.status(500).json({ error: "Internal server error" });
+      return res.status(500).json({ error: "Internal server error" });
     }
   }
+
+  const { latitude, longitude } = req.body;
+
   try {
-    const { latitude, longitude } = req.body;
-    const query =
-      'INSERT INTO "PlaybackDetails" (playback_id, latitude, longitude, "createdAt", "updatedAt") VALUES ($1, $2, $3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) RETURNING *';
-    const values = [playback.playback_id, latitude, longitude];
+    const playbackDetails = await PlaybackDetails.findAll({
+      where: {
+        playback_id: playback.playback_id,
+      },
+    });
+    /* Generic formula to get distance between two points
+       on any two dimensional coordinate plane.
+       Will be an approximation for latitude and longitude
+       due to the earth's curviture. */
+    const getDistanceBetweenPoints = (first, second) => {
+      var a = first.x - second.x;
+      var b = first.y - second.y;
 
-    // const res = await PlaybackDetails.findOne({
-    //   // where: { user_id: req.body.user_id, song_id: req.body.song_id },
-    //   where: {
-    //     playback_id: playback.playback_id,
-    //     latitude: latitude,
-    //     longitude: longitude,
-    //   },
-    // });
+      var distance = Math.sqrt(a * a + b * b);
+      return distance;
+    };
+    let isWithinRadiusOfAnyExisitingPlayback = false;
+    for (const playbackDetail of playbackDetails) {
+      const { latitude: existingLatitide, longitude: existingLongitude } =
+        playbackDetail;
+      const distance = getDistanceBetweenPoints(
+        { x: existingLatitide, y: existingLongitude },
+        { x: latitude, y: longitude }
+      );
+      const isOutsideRadius = distance >= GEOLOCATION_OFFEST;
+      if (!isOutsideRadius) {
+        isWithinRadiusOfAnyExisitingPlayback = true;
+        break;
+      }
+    }
+    if (!isWithinRadiusOfAnyExisitingPlayback) {
+      await PlaybackDetails.create({
+        playback_id: playback.playback_id,
+        latitude,
+        longitude,
+      });
+    } else {
+      console.log(
+        "Playback detail was not created because the given coordinates for this user ID for this song ID are within approximate location of an existing playback details record."
+      );
+    }
+  } catch (error) {
+    console.error("Error:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
 
-    const newPlaybackDetails = await db.query(query, {
-      bind: values,
-      type: db.QueryTypes.INSERT,
+  try {
+    await ActivePlaybackDetails.destroy({
+      where: { playback_id: playback.playback_id },
+    });
+    const newActivePlaybackDetails = await ActivePlaybackDetails.create({
+      playback_id: playback.playback_id,
+      latitude,
+      longitude,
     });
     const song = await Song.findByPk(playback.song_id);
     const user = await User.findByPk(playback.user_id);
     const newPlayback = {
       song_id: song.song_id,
       title: song.title,
-      arist: song.artist,
+      artist: song.artist,
       image_url: song.image_url,
       external_url: song.external_url,
       preview_url: song.preview_url,
-      latitude: newPlaybackDetails[0][0].latitude,
-      longitude: newPlaybackDetails[0][0].longitude,
+      latitude: newActivePlaybackDetails.latitude,
+      longitude: newActivePlaybackDetails.longitude,
       user_id: user.user_id,
     };
-    res.status(201).json(newPlayback);
+    return res.status(201).json(newPlayback);
   } catch (error) {
     console.error("Error:", error);
-    res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: "Internal server error" });
   }
 });
+
+// router.put("/:userId/:songId", async (req, res, next) => {
+//   try {
+//     const user_id = req.params.userId;
+//     const song_id = parseInt(req.params.songId);
+//     const { isCurrentlyPlaying } = req.body;
+
+//     const playbackToUpdate = await Playback.findOne({
+//       where: { user_id, song_id },
+//     });
+//     if (playbackToUpdate) {
+//       await playbackToUpdate.update({ isCurrentlyPlaying });
+//       const playbackState = playbackToUpdate.isCurrentlyPlaying;
+//       return res.status(200).json(playbackState);
+//     } else {
+//       return res.status(404).json({ message: "Playback not found" });
+//     }
+//   } catch (error) {
+//     console.error(error);
+//     return res.status(500).json({ message: "Server error" });
+//   }
+// });
 
 module.exports = router;
