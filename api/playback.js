@@ -247,10 +247,11 @@ router.post("/", async (req, res) => {
 
   try {
     await ActivePlaybackDetails.destroy({
-      where: { playback_id: playback.playback_id },
+      where: { user_id: user_id },
     });
     const newActivePlaybackDetails = await ActivePlaybackDetails.create({
       playback_id: playback.playback_id,
+      user_id: user_id,
       latitude,
       longitude,
     });
