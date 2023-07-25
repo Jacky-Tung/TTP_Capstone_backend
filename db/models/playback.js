@@ -26,6 +26,10 @@ const Playback = db.define("Playback", {
       key: "song_id",
     },
   },
+  // isCurrentlyPlaying: {
+  //   type: DataTypes.BOOLEAN,
+  //   defaultValue: true,
+  // },
 });
 
 module.exports = Playback;
