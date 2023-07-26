@@ -4,7 +4,7 @@
 [![License](https://img.shields.io/github/license/your-username/your-repo.svg?style=flat-square)](https://github.com/your-username/your-repo/blob/master/LICENSE)
 [![GitHub issues](https://img.shields.io/github/issues/Jacky-Tung/your-repo.svg?style=flat-square)](https://github.com/Jacky-Tung/TTP_Capstone_backend/issues)
 
-Proximity-based song discovery app
+Proximity-based song discovery app integrating Spotify Web API and Google Maps API
 
 ## Table of Contents
 
