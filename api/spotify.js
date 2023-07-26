@@ -165,9 +165,19 @@ router.get("/callback", function (req, res) {
    "expires_in": 3600
 } */
 
-router.get("/refresh_token", function (req, res) {
+router.get("/refresh_token/:user_id", async function (req, res) {
   // requesting access token from refresh token
-  var refresh_token = req.query.refresh_token;
+  var user_id = req.params.user_id;
+  const user = await User.findOne({where: {user_id: user_id}});
+  if(!user.refresh_token || !user){
+    res.redirect(
+      `/#` +
+        querystring.stringify({
+          error: "Invalid User",
+        })
+    );
+  }
+  const refresh_token = user.refresh_token;
   var authOptions = {
     url: "https://accounts.spotify.com/api/token",
     headers: {
@@ -182,10 +192,12 @@ router.get("/refresh_token", function (req, res) {
     json: true,
   };
 
-  request.post(authOptions, function (error, response, body) {
+  request.post(authOptions, async function (error, response, body) {
     if (!error && response.statusCode === 200) {
       var access_token = body.access_token;
-      res.json({access_token});
+      user.access_token = access_token;
+      await user.save();
+      res.json({updatedAt: Date.now()});
     }
   });
 });
