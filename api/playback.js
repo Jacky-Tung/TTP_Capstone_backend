@@ -12,7 +12,7 @@ const db = require("../db");
 const { sequelize, col } = require("sequelize/lib/model");
 
 // Approx 1 mile in terms of lat & long
-const GEOLOCATION_OFFEST = 0.01666666666;
+const GEOLOCATION_OFFEST = 0.01449275362;
 
 /**
  * Fetch all playbacks and playbackDetails

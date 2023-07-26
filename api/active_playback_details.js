@@ -71,16 +71,19 @@ router.use(express.json());
 //   }
 // });
 
-router.delete("/", async (req, res) => {
-  const playbackIdToDelete = req.body.playback_id;
+router.delete("/:userId", async (req, res) => {
+  const user_id = req.params.userId;
 
   try {
-    const playbackToDelete = await ActivePlaybackDetails.findOne({
-      where: { playback_id: playbackIdToDelete },
+    const playbackToDelete = await ActivePlaybackDetails.findAll({
+      where: { user_id: user_id },
     });
 
-    if (playbackToDelete) {
-      await playbackToDelete.destroy();
+    if (playbackToDelete.length > 0) {
+      await ActivePlaybackDetails.destroy({
+        where: { user_id: user_id },
+      });
+
       res.status(200).json({ message: "Playback deleted successfully." });
     } else {
       res.status(404).json({ error: "Playback not found." });
