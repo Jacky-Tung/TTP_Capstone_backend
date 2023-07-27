@@ -12,7 +12,7 @@ router.get("/currently-playing", async (req, res) => {
   const userId = req.query.user_id;
   try {
     // Fetch the user from the database based on the provided user ID
-    const user = await User.findOne({ where: { user_id : userId } });
+    const user = await User.findOne({ where: { user_id: userId } });
 
     if (!user) {
       return res.status(404).json({ error: "User not found." });
@@ -39,10 +39,10 @@ router.get("/currently-playing", async (req, res) => {
 
         // checks if song is already in db
         const existingSong = await Song.findOne({
-            where: {
-              title: song.name,
-              artist: song.artists[0].name,
-            },
+          where: {
+            title: song.name,
+            artist: song.artists[0].name,
+          },
         });
 
         if (!existingSong) {
@@ -76,25 +76,34 @@ router.get("/currently-playing", async (req, res) => {
 });
 
 // fetches playback state and timestamp
-// router.get("/playback-state", async (req,res) => {
-//   const fetch = {
-//     url: "https://api.spotify.com/v1/me/player",
-//     headers: {
-//       Authorization: `Bearer ` + req.query.access_token,
-//     },
-//     json: true,
-//   };
-
-//   request.get(fetch, async function (error, response, body) {
-//     if(error){
-//       console.error(error);
-//       return res.status(500).json({
-//         error: "Something went wrong while fetching playback state.",
-//       });
-//     }
-//     res.json({ is_playing: body.is_playing, timestamp: body.timestamp }); 
-//   });  
-// })
+router.get("/playback-state", async (req, res) => {
+  const userId = req.query.user_id;
+  const user = await User.findOne({ where: { user_id: userId } });
+  if (!user) {
+    return res.status(404).json({ error: "User not found." });
+  }
+  if (!user.access_token) {
+    return res.status(404).json({ error: "User not connected to spotify." });
+  }
+  const fetch = {
+    url: "https://api.spotify.com/v1/me/player",
+    headers: {
+      Authorization: `Bearer ` + user.access_token,
+    },
+    json: true,
+  };
+  request.get(fetch, async function (error, response, body) {
+    if (error) {
+      console.error(error);
+      return res.status(500).json({
+        error: "Something went wrong while fetching playback state.",
+      });
+    }
+    console.log(body);
+    if(body)
+      res.json({ is_playing: body.is_playing, timestamp: body.timestamp });
+  });
+});
 
 /**
  * Fetches all songs
