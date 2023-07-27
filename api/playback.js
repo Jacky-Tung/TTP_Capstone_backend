@@ -131,26 +131,32 @@ router.get("/:userId/:songId", async (req, res, next) => {
 // fetch personal playbacks by user id
 router.get("/:userId", async (req, res, next) => {
   try {
-    const user_id = parseInt(req.params.userId);
-    const result = await db.query(`
-        SELECT "Songs".song_id,
-               "Songs".title,
-               "Songs".artist,
-               "Songs".image_url,
-               "Songs".external_url,
-               "Songs".preview_url,
-               "PlaybackDetails".latitude,
-               "PlaybackDetails".longitude,
-               "Users".user_id
-        FROM "PlaybackDetails"
-        INNER JOIN "Playbacks"
-            ON "Playbacks".playback_id = "PlaybackDetails".playback_id
-        INNER JOIN "Songs"
-            ON "Playbacks".song_id = "Songs".song_id
-        INNER JOIN "Users"
-            ON "Playbacks".user_id = "Users".user_id
-        WHERE "Users".user_id = ${user_id}
-    `);
+    const user_id = req.params.userId;
+    console.log(user_id)
+    const result = await db.query(
+      `
+  SELECT "Songs".song_id,
+         "Songs".title,
+         "Songs".artist,
+         "Songs".image_url,
+         "Songs".external_url,
+         "Songs".preview_url,
+         "PlaybackDetails".latitude,
+         "PlaybackDetails".longitude,
+         "Users".user_id
+  FROM "PlaybackDetails"
+  INNER JOIN "Playbacks"
+      ON "Playbacks".playback_id = "PlaybackDetails".playback_id
+  INNER JOIN "Songs"
+      ON "Playbacks".song_id = "Songs".song_id
+  INNER JOIN "Users"
+      ON "Playbacks".user_id = "Users".user_id
+  WHERE "Users".user_id = :user_id
+`,
+      {
+        replacements: { user_id },
+      }
+    );
     return res.status(200).json({ content: result[0] });
   } catch (error) {
     next(error);
