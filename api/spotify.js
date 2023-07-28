@@ -129,28 +129,19 @@ router.get("/callback", function (req, res) {
               let userId = user.user_id; 
               // Redirect the user to the desired location
               res.redirect(
-                `http://localhost:3000/#` +
-                  querystring.stringify({
-                    userId
-                  })
+                `https://main--sunny-marzipan-74d73c.netlify.app/`
               );
             } catch (err) {
               console.error("Error storing user information:", err);
               res.redirect(
-                `http://localhost:3000/#` +
-                  querystring.stringify({
-                    error: "invalid_token",
-                  })
+                `https://main--sunny-marzipan-74d73c.netlify.app/`
               );
             }
           }
         });
       } else {
         res.redirect(
-          `http://localhost:3000/#` +
-            querystring.stringify({
-              error: "invalid_token",
-            })
+          `https://main--sunny-marzipan-74d73c.netlify.app/`
         );
       }
     });
