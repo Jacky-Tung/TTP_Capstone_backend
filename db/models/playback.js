@@ -7,7 +7,7 @@ const Playback = db.define("Playback", {
   playback_id: {
     type: DataTypes.INTEGER,
     allowNull: true,
-    unique: true,
+    unique: true, 
     autoIncrement: true,
   },
   user_id: {
