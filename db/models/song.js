@@ -25,7 +25,11 @@ const Song = db.define("Song", {
   },
   preview_url: {
     type: DataTypes.STRING,
-    allowNull: false,
+    allowNull: true,
+  },
+  isCurrentlyPlaying: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: true,
   },
 });
 
