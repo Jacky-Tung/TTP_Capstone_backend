@@ -128,21 +128,15 @@ router.get("/callback", function (req, res) {
                 await user.save();
               let userId = user.user_id; 
               // Redirect the user to the desired location
-              res.redirect(
-                `https://main--sunny-marzipan-74d73c.netlify.app/`
-              );
+              res.redirect(`https://spotify-proximity.netlify.app/`);
             } catch (err) {
               console.error("Error storing user information:", err);
-              res.redirect(
-                `https://main--sunny-marzipan-74d73c.netlify.app/`
-              );
+              res.redirect(`https://spotify-proximity.netlify.app/`);
             }
           }
         });
       } else {
-        res.redirect(
-          `https://main--sunny-marzipan-74d73c.netlify.app/`
-        );
+        res.redirect(`https://spotify-proximity.netlify.app/`);
       }
     });
   }
